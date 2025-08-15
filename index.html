@@ -3,10 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <title>Color Picker</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.js"></script>
 </head>
-<body>
-<input type="file" id="fileInput" accept="image/*">
+<body style="margin:0; padding:0;">
+<input type="file" id="fileInput" accept="image/*" style="display:block; margin:10px auto;">
 <script>
 let img;
 let imgWidth, imgHeight;
@@ -31,21 +32,19 @@ let createButtons = false;
 let d;
 
 function setup() {
-  createCanvas(900, 800);
+  createCanvas(windowWidth, windowHeight);
   background(255);
   textSize(20);
   d = new DetectColor();
 
-  // File input listener
   const fileInput = document.getElementById('fileInput');
   fileInput.addEventListener('change', (event) => {
     uploadedFile = event.target.files[0];
     if (uploadedFile) {
       loadImage(URL.createObjectURL(uploadedFile), (loadedImg) => {
         img = loadedImg;
-        // Resize if too big
-        const maxW = 800;
-        const maxH = 600;
+        const maxW = width * 0.9;
+        const maxH = height * 0.6;
         if (img.width > maxW || img.height > maxH) {
           const scale = min(maxW / img.width, maxH / img.height);
           imgWidth = img.width * scale;
@@ -64,49 +63,45 @@ function setup() {
 function draw() {
   background(255);
 
-  if (img) {
-    image(img, 50, 100, imgWidth, imgHeight);
-  }
+  if (img) image(img, width * 0.05, height * 0.2, imgWidth, imgHeight);
 
   fill(0);
   textSize(25);
 
   if (!img) {
-    text("Upload an image to start", 50, 50);
+    text("Upload an image to start", width * 0.05, 50);
     return;
   }
 
   if (whitePrompt) {
-    fill(255, 0, 0);
-    text("Click on the white circle", 50, 50);
+    fill('red');
+    text("Tap on the white circle", width * 0.05, 50);
   }
 
   if (whiteDirections) {
-    fill(255,0,0);
+    fill('red');
     ellipse(xWhite, yWhite, 5);
     fill(0);
-    text("This is where the white color will be recorded", 50, 20);
-    text("Press CONFIRM to confirm white color choice",50,55);
-    text("Press RESET to choose a different spot for white color", 50, 90);
+    text("This is where the white color will be recorded", width * 0.05, 20);
+    text("Press CONFIRM to confirm, RESET to choose a different spot for white color", width * 0.05, 55);
     createButtons = true;
   }
 
   if (colorPrompt) {
-    fill(255, 0, 0);
-    text("Click on the purple circle", 50, 50);
+    fill('red');
+    text("Tap on the purple circle", width * 0.05, 50);
     fill(0);
-    ellipse(xWhite, yWhite, 5); // keep white point visible
+    ellipse(xWhite, yWhite, 5);
   }
 
   if (colorDirections) {
     fill(0);
     ellipse(xWhite, yWhite, 5);
-    fill(255,0,0);
+    fill('red');
     ellipse(xColor, yColor, 5);
     fill(0);
-    text("This is where the purple color will be recorded", 50, 20);
-    text("Press CONFIRM to confirm purple color choice",50,55);
-    text("Press RESET to choose a different spot for purple color", 50, 90);
+    text("This is where the purple color will be recorded", width * 0.05, 20);
+    text("Press CONFIRM to confirm, RESET to choose a different spot for purple color", width * 0.05, 55);
     createButtons = true;
   }
 
@@ -116,56 +111,66 @@ function draw() {
     fill(c[3], c[5], c[4]);
     let s = d.getColorValues();
     textSize(20);
-    text("Red: " + s[0] + ", Blue: " + s[1] + ", Green: " + s[2], 50, 50);
-    textSize(30);
-    text("Adjusted for lighting, camera quality, etc.:",50,90);
-    text("Red: " + s[3] + ", Blue: " + s[4] + ", Green: " + s[5], 50, 130);
-    text("CF diagnosis: (will add later)", 50, 170);
+    text(`Red: ${s[0]}, Blue: ${s[1]}, Green: ${s[2]}`, width * 0.05, 50);
+    textSize(25);
+    text("Adjusted values:", width * 0.05, 90);
+    text(`Red: ${s[3]}, Blue: ${s[4]}, Green: ${s[5]}`, width * 0.05, 130);
+    text("CF diagnosis: will add once data is collected", width * 0.05, 170);
   }
 
-  if (createButtons) {
-    drawButtons();
-  }
+  if (createButtons) drawButtons();
+}
+
+function touchStarted() {
+  handleInput(touchX, touchY);
+  return false; // prevent default scrolling
 }
 
 function mousePressed() {
+  handleInput(mouseX, mouseY);
+}
+
+function handleInput(mx, my) {
+  let buttonY = height * 0.15;
+  let buttonHeight = 40;
+
   if (runWhite && whitePrompt) {
-    xWhite = mouseX;
-    yWhite = mouseY;
+    xWhite = mx;
+    yWhite = my;
     whitePrompt = false;
     whiteDirections = true;
     whitePicked = true;
-    d.whiteCircle(floor((xWhite - 50) * (img.width / imgWidth)), floor((yWhite - 100) * (img.height / imgHeight)), img);
+    d.whiteCircle(floor((xWhite - width*0.05) * (img.width / imgWidth)), floor((yWhite - height*0.2) * (img.height / imgHeight)), img);
   } else if (runColor && colorPrompt) {
-    xColor = mouseX;
-    yColor = mouseY;
+    xColor = mx;
+    yColor = my;
     colorPrompt = false;
     colorDirections = true;
     colorPicked = true;
-    d.purple(floor((xColor - 50) * (img.width / imgWidth)), floor((yColor - 100) * (img.height / imgHeight)), img);
+    d.purple(floor((xColor - width*0.05) * (img.width / imgWidth)), floor((yColor - height*0.2) * (img.height / imgHeight)), img);
   }
 
-  // Buttons for white
-  if (whiteDirections && mouseX > 20 && mouseX < 102 && mouseY > 120 && mouseY < 140) {
+  // White buttons
+  if (whiteDirections && mx > 20 && mx < 140 && my > buttonY && my < buttonY + buttonHeight) {
     runWhite = false;
     runColor = true;
     colorPrompt = true;
     createButtons = false;
     whiteDirections = false;
-  } else if (whiteDirections && mouseX > 120 && mouseX < 185 && mouseY > 120 && mouseY < 140) {
+  } else if (whiteDirections && mx > 160 && mx < 280 && my > buttonY && my < buttonY + buttonHeight) {
     whitePicked = false;
     whitePrompt = true;
     whiteDirections = false;
     createButtons = false;
   }
 
-  // Buttons for color
-  if (colorDirections && mouseX > 20 && mouseX < 102 && mouseY > 120 && mouseY < 140) {
+  // Color buttons
+  if (colorDirections && mx > 20 && mx < 140 && my > buttonY && my < buttonY + buttonHeight) {
     finishedPicking = true;
     runColor = false;
     colorDirections = false;
     createButtons = false;
-  } else if (colorDirections && mouseX > 120 && mouseX < 185 && mouseY > 120 && mouseY < 140) {
+  } else if (colorDirections && mx > 160 && mx < 280 && my > buttonY && my < buttonY + buttonHeight) {
     colorPicked = false;
     colorPrompt = true;
     colorDirections = false;
@@ -174,72 +179,55 @@ function mousePressed() {
 }
 
 function drawButtons() {
-  fill(255);
-  rect(20, 120, 82, 20);
-  rect(120, 120, 65, 20);
+  let buttonY = height * 0.15;
+  fill(200);
+  rect(20, buttonY, 120, 40, 10);
+  rect(160, buttonY, 120, 40, 10);
   fill(0);
-  textSize(15);
-    text("CONFIRM", 23, 135);
-    text("RESET", 126, 135);
+  textSize(20);
+  text("CONFIRM", 30, buttonY + 30);
+  text("RESET", 190, buttonY + 30);
 }
 
-// ------------------ DetectColor class ------------------
 class DetectColor {
   constructor() {
-    this.whiter = 0;
-    this.whiteb = 0;
-    this.whiteg = 0;
-    this.scaleR = 1;
-    this.scaleB = 1;
-    this.scaleG = 1;
-    this.correctedR = 0;
-    this.correctedB = 0;
-    this.correctedG = 0;
-    this.r = 0;
-    this.b = 0;
-    this.g = 0;
-    this.s = [];
+    this.whiter = 0; this.whiteb = 0; this.whiteg = 0;
+    this.scaleR = 1; this.scaleB = 1; this.scaleG = 1;
+    this.correctedR = 0; this.correctedB = 0; this.correctedG = 0;
+    this.r = 0; this.b = 0; this.g = 0; this.s = [];
   }
 
   whiteCircle(x, y, imageRef) {
     let c = imageRef.get(x, y);
-    this.whiter = red(c);
-    this.whiteb = blue(c);
-    this.whiteg = green(c);
+    this.whiter = red(c); this.whiteb = blue(c); this.whiteg = green(c);
   }
 
   purple(x, y, imageRef) {
     let c = imageRef.get(x, y);
-    this.r = red(c);
-    this.b = blue(c);
-    this.g = green(c);
-
+    this.r = red(c); this.b = blue(c); this.g = green(c);
     this.scaleR = 255 / this.whiter;
     this.scaleB = 255 / this.whiteb;
     this.scaleG = 255 / this.whiteg;
-
     this.correctedR = constrain(this.r * this.scaleR, 0, 255);
     this.correctedB = constrain(this.b * this.scaleB, 0, 255);
     this.correctedG = constrain(this.g * this.scaleG, 0, 255);
   }
 
   getColorValues() {
-    if (this.s.length < 7) {
+    if (this.s.length < 6) {
       this.s.push(int(this.r), int(this.b), int(this.g), int(this.correctedR), int(this.correctedB), int(this.correctedG));
     }
     return this.s;
   }
 
   colors() {
-    return [
-      int(this.whiter * this.scaleR),
-      int(this.whiteb * this.scaleB),
-      int(this.whiteg * this.scaleG),
-      int(this.correctedR),
-      int(this.correctedB),
-      int(this.correctedG)
-    ];
+    return [int(this.whiter * this.scaleR), int(this.whiteb * this.scaleB), int(this.whiteg * this.scaleG),
+            int(this.correctedR), int(this.correctedB), int(this.correctedG)];
   }
+}
+
+function windowResized() {
+  resizeCanvas(windowWidth, windowHeight);
 }
 </script>
 </body>
