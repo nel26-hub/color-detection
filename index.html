@@ -131,24 +131,42 @@ function mousePressed() {
 }
 
 function handleInput(mx, my) {
-  let buttonY = height * 0.15;
-  let buttonHeight = 40;
+  // Image boundaries
+  let imgX = width * 0.05;
+  let imgY = height * 0.2;
+  let imgX2 = imgX + imgWidth;
+  let imgY2 = imgY + imgHeight;
 
-  if (runWhite && whitePrompt) {
-    xWhite = mx;
+  // Check if tap is inside image area
+  let insideImage = (mx >= imgX && mx <= imgX2 && my >= imgY && my <= imgY2);
+
+  // White selection
+  if (runWhite && whitePrompt && insideImage) {
+    xWhite = mx; // store screen position for drawing
     yWhite = my;
     whitePrompt = false;
     whiteDirections = true;
     whitePicked = true;
-    d.whiteCircle(floor((xWhite - width*0.05) * (img.width / imgWidth)), floor((yWhite - height*0.2) * (img.height / imgHeight)), img);
-  } else if (runColor && colorPrompt) {
+    // Map screen coords to image pixel coords
+    let px = floor((mx - imgX) * (img.width / imgWidth));
+    let py = floor((my - imgY) * (img.height / imgHeight));
+    d.whiteCircle(px, py, img);
+  }
+
+  // Purple selection
+  else if (runColor && colorPrompt && insideImage) {
     xColor = mx;
     yColor = my;
     colorPrompt = false;
     colorDirections = true;
     colorPicked = true;
-    d.purple(floor((xColor - width*0.05) * (img.width / imgWidth)), floor((yColor - height*0.2) * (img.height / imgHeight)), img);
+    let px = floor((mx - imgX) * (img.width / imgWidth));
+    let py = floor((my - imgY) * (img.height / imgHeight));
+    d.purple(px, py, img);
   }
+
+  let buttonY = height * 0.15;
+  let buttonHeight = 40;
 
   // White buttons
   if (whiteDirections && mx > 20 && mx < 140 && my > buttonY && my < buttonY + buttonHeight) {
@@ -177,6 +195,7 @@ function handleInput(mx, my) {
     createButtons = false;
   }
 }
+
 
 function drawButtons() {
   let buttonY = height * 0.15;
