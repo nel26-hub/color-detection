@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Color Picker</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.js"></script>
 </head>
 <body style="margin:0; padding:0;">
-<input type="file" id="fileInput" accept="image/*" style="display:block; margin:10px auto;">
+<input type="file" id="fileInput" accept="image/*" style="display:block; margin:10px auto;" />
 <script>
 let img;
 let imgWidth, imgHeight;
@@ -31,10 +31,15 @@ let createButtons = false;
 
 let d;
 
+// button geometry shared by draw + hit test
+let btnConfirm = { x: 20, y: 0, w: 120, h: 44 };
+let btnReset   = { x: 160, y: 0, w: 120, h: 44 };
+
 function setup() {
   createCanvas(windowWidth, windowHeight);
   background(255);
   textSize(20);
+  textWrap(WORD);
   d = new DetectColor();
 
   const fileInput = document.getElementById('fileInput');
@@ -63,45 +68,49 @@ function setup() {
 function draw() {
   background(255);
 
-  if (img) image(img, width * 0.05, height * 0.2, imgWidth, imgHeight);
+  // leave space for instructions above image
+  const imgX = width * 0.05;
+  const imgY = height * 0.25;
+
+  if (img) image(img, imgX, imgY, imgWidth, imgHeight);
 
   fill(0);
-  textSize(25);
+  textSize(22);
 
   if (!img) {
-    text("Upload an image to start", width * 0.05, 50);
+    text("Upload an image to start", width * 0.05, 20, width * 0.9);
     return;
   }
 
   if (whitePrompt) {
     fill('red');
-    text("Tap on the white circle", width * 0.05, 50);
+    text("Tap on the white circle", width * 0.05, 20, width * 0.9);
   }
 
   if (whiteDirections) {
     fill('red');
-    ellipse(xWhite, yWhite, 5);
+    ellipse(xWhite, yWhite, 7);
     fill(0);
-    text("This is where the white color will be recorded", width * 0.05, 20);
-    text("Press CONFIRM to confirm, RESET to choose a different spot for white color", width * 0.05, 55);
+    text("This is where the white color will be recorded", width * 0.05, 20, width * 0.9);
+    text("Press CONFIRM to confirm, RESET to choose a different spot for white color", width * 0.05, 60, width * 0.9);
     createButtons = true;
   }
 
   if (colorPrompt) {
     fill('red');
-    text("Tap on the purple circle", width * 0.05, 50);
+    text("Tap on the purple circle", width * 0.05, 20, width * 0.9);
     fill(0);
-    ellipse(xWhite, yWhite, 5);
+    ellipse(xWhite, yWhite, 7);
   }
 
   if (colorDirections) {
     fill(0);
-    ellipse(xWhite, yWhite, 5);
+    ellipse(xWhite, yWhite, 7);
     fill('red');
-    ellipse(xColor, yColor, 5);
+    ellipse(xColor, yColor, 7);
     fill(0);
-    text("This is where the purple color will be recorded", width * 0.05, 20);
-    text("Press CONFIRM to confirm, RESET to choose a different spot for purple color", width * 0.05, 55);
+    text("This is where the purple color will be recorded", width * 0.05, 20, width * 0.9);
+    text("Press CONFIRM to confirm, RESET to choose a different spot for purple color", width * 0.05, 60, width * 0.9);
     createButtons = true;
   }
 
@@ -111,11 +120,11 @@ function draw() {
     fill(c[3], c[5], c[4]);
     let s = d.getColorValues();
     textSize(20);
-    text(`Red: ${s[0]}, Blue: ${s[1]}, Green: ${s[2]}`, width * 0.05, 50);
-    textSize(25);
-    text("Adjusted values:", width * 0.05, 90);
-    text(`Red: ${s[3]}, Blue: ${s[4]}, Green: ${s[5]}`, width * 0.05, 130);
-    text("CF diagnosis: will add once data is collected", width * 0.05, 170);
+    text(`Red: ${s[0]}, Blue: ${s[1]}, Green: ${s[2]}`, width * 0.05, 20, width * 0.9);
+    textSize(24);
+    text("Adjusted values:", width * 0.05, 60, width * 0.9);
+    text(`Red: ${s[3]}, Blue: ${s[4]}, Green: ${s[5]}`, width * 0.05, 96, width * 0.9);
+    text("CF diagnosis: will add once data is collected", width * 0.05, 132, width * 0.9);
   }
 
   if (createButtons) drawButtons();
@@ -123,7 +132,7 @@ function draw() {
 
 function touchStarted() {
   handleInput(touchX, touchY);
-  return false; // prevent default scrolling
+  return false;
 }
 
 function mousePressed() {
@@ -131,81 +140,112 @@ function mousePressed() {
 }
 
 function handleInput(mx, my) {
-  // Image boundaries
-  let imgX = width * 0.05;
-  let imgY = height * 0.2;
-  let imgX2 = imgX + imgWidth;
-  let imgY2 = imgY + imgHeight;
-
-  // Check if tap is inside image area
-  let insideImage = (mx >= imgX && mx <= imgX2 && my >= imgY && my <= imgY2);
+  // image bounds for hit testing
+  const imgX = width * 0.05;
+  const imgY = height * 0.25;
+  const insideImage = img &&
+    mx >= imgX && mx <= imgX + imgWidth &&
+    my >= imgY && my <= imgY + imgHeight;
 
   // White selection
   if (runWhite && whitePrompt && insideImage) {
-    xWhite = mx; // store screen position for drawing
+    xWhite = mx;
     yWhite = my;
     whitePrompt = false;
     whiteDirections = true;
     whitePicked = true;
-    // Map screen coords to image pixel coords
-    let px = floor((mx - imgX) * (img.width / imgWidth));
-    let py = floor((my - imgY) * (img.height / imgHeight));
+    const px = floor((mx - imgX) * (img.width / imgWidth));
+    const py = floor((my - imgY) * (img.height / imgHeight));
     d.whiteCircle(px, py, img);
+    return;
   }
 
   // Purple selection
-  else if (runColor && colorPrompt && insideImage) {
+  if (runColor && colorPrompt && insideImage) {
     xColor = mx;
     yColor = my;
     colorPrompt = false;
     colorDirections = true;
     colorPicked = true;
-    let px = floor((mx - imgX) * (img.width / imgWidth));
-    let py = floor((my - imgY) * (img.height / imgHeight));
+    const px = floor((mx - imgX) * (img.width / imgWidth));
+    const py = floor((my - imgY) * (img.height / imgHeight));
     d.purple(px, py, img);
+    return;
   }
 
-  let buttonY = height * 0.15;
-  let buttonHeight = 40;
-
-  // White buttons
-  if (whiteDirections && mx > 20 && mx < 140 && my > buttonY && my < buttonY + buttonHeight) {
-    runWhite = false;
-    runColor = true;
-    colorPrompt = true;
-    createButtons = false;
-    whiteDirections = false;
-  } else if (whiteDirections && mx > 160 && mx < 280 && my > buttonY && my < buttonY + buttonHeight) {
-    whitePicked = false;
-    whitePrompt = true;
-    whiteDirections = false;
-    createButtons = false;
+  // Button hits (use same geometry as drawButtons)
+  if (whiteDirections) {
+    if (pointInRect(mx, my, btnConfirm)) {
+      runWhite = false;
+      runColor = true;
+      colorPrompt = true;
+      createButtons = false;
+      whiteDirections = false;
+      return;
+    }
+    if (pointInRect(mx, my, btnReset)) {
+      whitePicked = false;
+      whitePrompt = true;
+      whiteDirections = false;
+      createButtons = false;
+      return;
+    }
   }
 
-  // Color buttons
-  if (colorDirections && mx > 20 && mx < 140 && my > buttonY && my < buttonY + buttonHeight) {
-    finishedPicking = true;
-    runColor = false;
-    colorDirections = false;
-    createButtons = false;
-  } else if (colorDirections && mx > 160 && mx < 280 && my > buttonY && my < buttonY + buttonHeight) {
-    colorPicked = false;
-    colorPrompt = true;
-    colorDirections = false;
-    createButtons = false;
+  if (colorDirections) {
+    if (pointInRect(mx, my, btnConfirm)) {
+      finishedPicking = true;
+      runColor = false;
+      colorDirections = false;
+      createButtons = false;
+      return;
+    }
+    if (pointInRect(mx, my, btnReset)) {
+      colorPicked = false;
+      colorPrompt = true;
+      colorDirections = false;
+      createButtons = false;
+      return;
+    }
   }
 }
 
+function pointInRect(px, py, r) {
+  return px >= r.x && px <= r.x + r.w && py >= r.y && py <= r.y + r.h;
+}
 
 function drawButtons() {
-  let buttonY = height * 0.15;
-  fill(200);
-  rect(20, buttonY, 120, 40, 10);
-  rect(160, buttonY, 120, 40, 10);
+  // place buttons a bit below the instruction text, responsive width
+  const buttonY = height * 0.16;
+  const btnW = min(150, width * 0.4);
+  const btnH = 44;
+  const gap = min(20, width * 0.05);
+  const startX = 20;
+
+  // update shared geometry
+  btnConfirm.x = startX;
+  btnConfirm.y = buttonY;
+  btnConfirm.w = btnW;
+  btnConfirm.h = btnH;
+
+  btnReset.x = startX + btnW + gap;
+  btnReset.y = buttonY;
+  btnReset.w = btnW;
+  btnReset.h = btnH;
+
+  push();
+  stroke(60);
+  fill(220);
+  rect(btnConfirm.x, btnConfirm.y, btnConfirm.w, btnConfirm.h, 10);
+  rect(btnReset.x, btnReset.y, btnReset.w, btnReset.h, 10);
+
+  noStroke();
   fill(0);
-  textSize(20);
-  text("CONFIRM", 30, buttonY + 30);
-  text("RESET", 190, buttonY + 30);
+  textSize(16);
+  textAlign(CENTER, CENTER);  // <-- centers labels inside each rect
+  text("CONFIRM", btnConfirm.x + btnConfirm.w/2, btnConfirm.y + btnConfirm.h/2);
+  text("RESET",   btnReset.x   + btnReset.w/2,   btnReset.y   + btnReset.h/2);
+  pop();
 }
 
 class DetectColor {
@@ -217,12 +257,12 @@ class DetectColor {
   }
 
   whiteCircle(x, y, imageRef) {
-    let c = imageRef.get(x, y);
+    const c = imageRef.get(x, y);
     this.whiter = red(c); this.whiteb = blue(c); this.whiteg = green(c);
   }
 
   purple(x, y, imageRef) {
-    let c = imageRef.get(x, y);
+    const c = imageRef.get(x, y);
     this.r = red(c); this.b = blue(c); this.g = green(c);
     this.scaleR = 255 / this.whiter;
     this.scaleB = 255 / this.whiteb;
@@ -234,14 +274,23 @@ class DetectColor {
 
   getColorValues() {
     if (this.s.length < 6) {
-      this.s.push(int(this.r), int(this.b), int(this.g), int(this.correctedR), int(this.correctedB), int(this.correctedG));
+      this.s.push(
+        int(this.r), int(this.b), int(this.g),
+        int(this.correctedR), int(this.correctedB), int(this.correctedG)
+      );
     }
     return this.s;
   }
 
   colors() {
-    return [int(this.whiter * this.scaleR), int(this.whiteb * this.scaleB), int(this.whiteg * this.scaleG),
-            int(this.correctedR), int(this.correctedB), int(this.correctedG)];
+    return [
+      int(this.whiter * this.scaleR),
+      int(this.whiteb * this.scaleB),
+      int(this.whiteg * this.scaleG),
+      int(this.correctedR),
+      int(this.correctedB),
+      int(this.correctedG)
+    ];
   }
 }
 
