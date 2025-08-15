@@ -68,7 +68,6 @@ function setup() {
 function draw() {
   background(255);
 
-  // leave space for instructions above image
   const imgX = width * 0.05;
   const imgY = height * 0.25;
 
@@ -140,14 +139,12 @@ function mousePressed() {
 }
 
 function handleInput(mx, my) {
-  // image bounds for hit testing
   const imgX = width * 0.05;
   const imgY = height * 0.25;
   const insideImage = img &&
     mx >= imgX && mx <= imgX + imgWidth &&
     my >= imgY && my <= imgY + imgHeight;
 
-  // White selection
   if (runWhite && whitePrompt && insideImage) {
     xWhite = mx;
     yWhite = my;
@@ -160,7 +157,6 @@ function handleInput(mx, my) {
     return;
   }
 
-  // Purple selection
   if (runColor && colorPrompt && insideImage) {
     xColor = mx;
     yColor = my;
@@ -173,7 +169,6 @@ function handleInput(mx, my) {
     return;
   }
 
-  // Button hits (use same geometry as drawButtons)
   if (whiteDirections) {
     if (pointInRect(mx, my, btnConfirm)) {
       runWhite = false;
@@ -215,14 +210,12 @@ function pointInRect(px, py, r) {
 }
 
 function drawButtons() {
-  // place buttons a bit below the instruction text, responsive width
   const buttonY = height * 0.16;
   const btnW = min(150, width * 0.4);
   const btnH = 44;
   const gap = min(20, width * 0.05);
   const startX = 20;
 
-  // update shared geometry
   btnConfirm.x = startX;
   btnConfirm.y = buttonY;
   btnConfirm.w = btnW;
@@ -242,7 +235,7 @@ function drawButtons() {
   noStroke();
   fill(0);
   textSize(16);
-  textAlign(CENTER, CENTER);  // <-- centers labels inside each rect
+  textAlign(CENTER, CENTER);
   text("CONFIRM", btnConfirm.x + btnConfirm.w/2, btnConfirm.y + btnConfirm.h/2);
   text("RESET",   btnReset.x   + btnReset.w/2,   btnReset.y   + btnReset.h/2);
   pop();
