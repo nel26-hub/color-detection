@@ -7,7 +7,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.6.0/p5.js"></script>
 </head>
 <body style="margin:0; padding:0;">
-<!-- ✅ keep input above canvas -->
 <input type="file" id="fileInput" accept="image/*" 
        style="display:block; margin:10px auto; position:relative; z-index:10;" />
 
@@ -34,7 +33,7 @@ let createButtons = false;
 
 let d;
 
-// button geometry shared by draw + hit test
+// button geometry
 let btnConfirm = { x: 20, y: 0, w: 120, h: 44 };
 let btnReset   = { x: 160, y: 0, w: 120, h: 44 };
 
@@ -52,7 +51,7 @@ function setup() {
       const objectURL = URL.createObjectURL(uploadedFile);
       loadImage(objectURL, (loadedImg) => {
         img = loadedImg;
-        URL.revokeObjectURL(objectURL); // cleanup for mobile
+        URL.revokeObjectURL(objectURL);
         const maxW = width * 0.9;
         const maxH = height * 0.6;
         if (img.width > maxW || img.height > maxH) {
@@ -80,12 +79,10 @@ function draw() {
     return;
   }
 
-  // ✅ Center image dynamically
   const imgX = (width - imgWidth) / 2;
   const imgY = (height - imgHeight) / 2;
   image(img, imgX, imgY, imgWidth, imgHeight);
 
-  // save image bounds for hit testing
   window.imgBounds = { x: imgX, y: imgY, w: imgWidth, h: imgHeight };
 
   fill(0);
@@ -101,12 +98,12 @@ function draw() {
     ellipse(xWhite, yWhite, 7);
     fill(0);
     textSize(18);
-  textLeading(24);
-  text(
-  "This is where the white color will be recorded\n" +
-  "Press CONFIRM to confirm, RESET to choose a different spot for white color",
-  width * 0.05, height * 0.05, width * 0.9
-);
+    textLeading(24);
+    drawInstructionsAndButtons(
+      "This is where the white color will be recorded\n" +
+      "Press CONFIRM to confirm, RESET to choose a different spot for white color",
+      imgY
+    );
     createButtons = true;
   }
 
@@ -124,12 +121,12 @@ function draw() {
     ellipse(xColor, yColor, 7);
     fill(0);
     textSize(18);
-textLeading(24);
-text(
-  "This is where the purple color will be recorded\n" +
-  "Press CONFIRM to confirm, RESET to choose a different spot for purple color",
-  width * 0.05, height * 0.05, width * 0.9
-);
+    textLeading(24);
+    drawInstructionsAndButtons(
+      "This is where the purple color will be recorded\n" +
+      "Press CONFIRM to confirm, RESET to choose a different spot for purple color",
+      imgY
+    );
     createButtons = true;
   }
 
@@ -145,15 +142,23 @@ text(
     text(`Red: ${s[3]}, Blue: ${s[4]}, Green: ${s[5]}`, width * 0.05, 96, width * 0.9);
     text("CF diagnosis: will add once data is collected", width * 0.05, 132, width * 0.9);
   }
+}
 
-  if (createButtons) drawButtons();
+function drawInstructionsAndButtons(textBlock, imgTop) {
+  const textTop = 20;
+  text(textBlock, width * 0.05, textTop, width * 0.9);
+
+  const lines = textBlock.split("\n").length;
+  const textHeight = lines * 24;
+
+  // Buttons appear below text but never overlap the image
+  drawButtons(Math.min(textTop + textHeight + 10, imgTop - 60));
 }
 
 function touchStarted() {
   if (touches.length > 0) {
     handleInput(touches[0].x, touches[0].y);
   }
-  // ⚠️ removed return false; so file input works
 }
 
 function mousePressed() {
@@ -168,11 +173,8 @@ function handleInput(mx, my) {
     my >= window.imgBounds.y && my <= window.imgBounds.y + window.imgBounds.h;
 
   if (runWhite && whitePrompt && insideImage) {
-    xWhite = mx;
-    yWhite = my;
-    whitePrompt = false;
-    whiteDirections = true;
-    whitePicked = true;
+    xWhite = mx; yWhite = my;
+    whitePrompt = false; whiteDirections = true; whitePicked = true;
     const px = floor((mx - window.imgBounds.x) * (img.width / window.imgBounds.w));
     const py = floor((my - window.imgBounds.y) * (img.height / window.imgBounds.h));
     d.whiteCircle(px, py, img);
@@ -180,11 +182,8 @@ function handleInput(mx, my) {
   }
 
   if (runColor && colorPrompt && insideImage) {
-    xColor = mx;
-    yColor = my;
-    colorPrompt = false;
-    colorDirections = true;
-    colorPicked = true;
+    xColor = mx; yColor = my;
+    colorPrompt = false; colorDirections = true; colorPicked = true;
     const px = floor((mx - window.imgBounds.x) * (img.width / window.imgBounds.w));
     const py = floor((my - window.imgBounds.y) * (img.height / window.imgBounds.h));
     d.purple(px, py, img);
@@ -193,35 +192,26 @@ function handleInput(mx, my) {
 
   if (whiteDirections) {
     if (pointInRect(mx, my, btnConfirm)) {
-      runWhite = false;
-      runColor = true;
-      colorPrompt = true;
-      createButtons = false;
-      whiteDirections = false;
+      runWhite = false; runColor = true;
+      colorPrompt = true; createButtons = false; whiteDirections = false;
       return;
     }
     if (pointInRect(mx, my, btnReset)) {
-      whitePicked = false;
-      whitePrompt = true;
-      whiteDirections = false;
-      createButtons = false;
+      whitePicked = false; whitePrompt = true;
+      whiteDirections = false; createButtons = false;
       return;
     }
   }
 
   if (colorDirections) {
     if (pointInRect(mx, my, btnConfirm)) {
-      finishedPicking = true;
-      runColor = false;
-      colorDirections = false;
-      createButtons = false;
+      finishedPicking = true; runColor = false;
+      colorDirections = false; createButtons = false;
       return;
     }
     if (pointInRect(mx, my, btnReset)) {
-      colorPicked = false;
-      colorPrompt = true;
-      colorDirections = false;
-      createButtons = false;
+      colorPicked = false; colorPrompt = true;
+      colorDirections = false; createButtons = false;
       return;
     }
   }
@@ -231,20 +221,19 @@ function pointInRect(px, py, r) {
   return px >= r.x && px <= r.x + r.w && py >= r.y && py <= r.y + r.h;
 }
 
-function drawButtons() {
-  const buttonY = height * 0.16;
+function drawButtons(y) {
   const btnW = min(150, width * 0.4);
   const btnH = 44;
   const gap = min(20, width * 0.05);
   const startX = 20;
 
   btnConfirm.x = startX;
-  btnConfirm.y = buttonY;
+  btnConfirm.y = y;
   btnConfirm.w = btnW;
   btnConfirm.h = btnH;
 
   btnReset.x = startX + btnW + gap;
-  btnReset.y = buttonY;
+  btnReset.y = y;
   btnReset.w = btnW;
   btnReset.h = btnH;
 
