@@ -46,8 +46,10 @@ function setup() {
   fileInput.addEventListener('change', (event) => {
     uploadedFile = event.target.files[0];
     if (uploadedFile) {
-      loadImage(URL.createObjectURL(uploadedFile), (loadedImg) => {
+      const objectURL = URL.createObjectURL(uploadedFile);
+      loadImage(objectURL, (loadedImg) => {
         img = loadedImg;
+        URL.revokeObjectURL(objectURL); // cleanup for mobile
         const maxW = width * 0.9;
         const maxH = height * 0.6;
         if (img.width > maxW || img.height > maxH) {
@@ -129,8 +131,12 @@ function draw() {
   if (createButtons) drawButtons();
 }
 
+// ✅ FIXED touch handler
 function touchStarted() {
-  handleInput(touchX, touchY);
+  if (touches.length > 0) {
+    console.log("Tapped at:", touches[0].x, touches[0].y);
+    handleInput(touches[0].x, touches[0].y);
+  }
   return false;
 }
 
