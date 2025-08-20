@@ -70,18 +70,23 @@ function setup() {
 function draw() {
   background(255);
 
-  const imgX = width * 0.05;
-  const imgY = height * 0.25;
-
-  if (img) image(img, imgX, imgY, imgWidth, imgHeight);
-
-  fill(0);
-  textSize(22);
-
   if (!img) {
+    fill(0);
+    textSize(22);
     text("Upload an image to start", width * 0.05, 20, width * 0.9);
     return;
   }
+
+  // ✅ Center image dynamically
+  const imgX = (width - imgWidth) / 2;
+  const imgY = (height - imgHeight) / 2;
+  image(img, imgX, imgY, imgWidth, imgHeight);
+
+  // save image bounds for hit testing
+  window.imgBounds = { x: imgX, y: imgY, w: imgWidth, h: imgHeight };
+
+  fill(0);
+  textSize(22);
 
   if (whitePrompt) {
     fill('red');
@@ -131,10 +136,8 @@ function draw() {
   if (createButtons) drawButtons();
 }
 
-// ✅ FIXED touch handler
 function touchStarted() {
   if (touches.length > 0) {
-    console.log("Tapped at:", touches[0].x, touches[0].y);
     handleInput(touches[0].x, touches[0].y);
   }
   return false;
@@ -145,11 +148,11 @@ function mousePressed() {
 }
 
 function handleInput(mx, my) {
-  const imgX = width * 0.05;
-  const imgY = height * 0.25;
+  if (!window.imgBounds) return;
+
   const insideImage = img &&
-    mx >= imgX && mx <= imgX + imgWidth &&
-    my >= imgY && my <= imgY + imgHeight;
+    mx >= window.imgBounds.x && mx <= window.imgBounds.x + window.imgBounds.w &&
+    my >= window.imgBounds.y && my <= window.imgBounds.y + window.imgBounds.h;
 
   if (runWhite && whitePrompt && insideImage) {
     xWhite = mx;
@@ -157,8 +160,8 @@ function handleInput(mx, my) {
     whitePrompt = false;
     whiteDirections = true;
     whitePicked = true;
-    const px = floor((mx - imgX) * (img.width / imgWidth));
-    const py = floor((my - imgY) * (img.height / imgHeight));
+    const px = floor((mx - window.imgBounds.x) * (img.width / window.imgBounds.w));
+    const py = floor((my - window.imgBounds.y) * (img.height / window.imgBounds.h));
     d.whiteCircle(px, py, img);
     return;
   }
@@ -169,8 +172,8 @@ function handleInput(mx, my) {
     colorPrompt = false;
     colorDirections = true;
     colorPicked = true;
-    const px = floor((mx - imgX) * (img.width / imgWidth));
-    const py = floor((my - imgY) * (img.height / imgHeight));
+    const px = floor((mx - window.imgBounds.x) * (img.width / window.imgBounds.w));
+    const py = floor((my - window.imgBounds.y) * (img.height / window.imgBounds.h));
     d.purple(px, py, img);
     return;
   }
