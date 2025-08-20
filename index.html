@@ -100,8 +100,13 @@ function draw() {
     fill('red');
     ellipse(xWhite, yWhite, 7);
     fill(0);
-    text("This is where the white color will be recorded", width * 0.05, 20, width * 0.9);
-    text("Press CONFIRM to confirm, RESET to choose a different spot for white color", width * 0.05, 60, width * 0.9);
+    textSize(18);
+  textLeading(24);
+  text(
+  "This is where the white color will be recorded\n" +
+  "Press CONFIRM to confirm, RESET to choose a different spot for white color",
+  width * 0.05, 20, width * 0.9
+);
     createButtons = true;
   }
 
@@ -118,8 +123,13 @@ function draw() {
     fill('red');
     ellipse(xColor, yColor, 7);
     fill(0);
-    text("This is where the purple color will be recorded", width * 0.05, 20, width * 0.9);
-    text("Press CONFIRM to confirm, RESET to choose a different spot for purple color", width * 0.05, 60, width * 0.9);
+    textSize(18);
+textLeading(24);
+text(
+  "This is where the purple color will be recorded\n" +
+  "Press CONFIRM to confirm, RESET to choose a different spot for white color",
+  width * 0.05, 20, width * 0.9
+);
     createButtons = true;
   }
 
