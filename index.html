@@ -151,9 +151,13 @@ function drawInstructionsAndButtons(textBlock, imgTop) {
   const lines = textBlock.split("\n").length;
   const textHeight = lines * 24;
 
-  // Buttons appear below text but never overlap the image
-  drawButtons(Math.min(textTop + textHeight + 10, imgTop - 60));
+  // Put buttons safely below the text
+  const buttonY = textTop + textHeight + 20;
+
+  // Ensure buttons don’t overlap the image
+  drawButtons(Math.min(buttonY, imgTop - 60));
 }
+
 
 function touchStarted() {
   if (touches.length > 0) {
