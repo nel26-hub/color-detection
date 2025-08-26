@@ -145,18 +145,18 @@ function draw() {
 }
 
 function drawInstructionsAndButtons(textBlock, imgTop) {
-  const textTop = 20;
-  text(textBlock, width * 0.05, textTop, width * 0.9);
+  // Place instructions a little above the image
+  const textTop = imgTop - 80; // 80px above image top
+  text(textBlock, width * 0.05, max(20, textTop), width * 0.9);
 
   const lines = textBlock.split("\n").length;
   const textHeight = lines * 24;
 
-  // Put buttons safely below the text
-  const buttonY = textTop + textHeight + 20;
-
-  // Ensure buttons don’t overlap the image
-  drawButtons(Math.min(buttonY, imgTop - 60));
+  // Put buttons below the instructions text, but above the image
+  const buttonY = max(20, textTop + textHeight + 10);
+  drawButtons(buttonY);
 }
+
 
 
 function touchStarted() {
