@@ -102,7 +102,7 @@ function draw() {
     drawInstructionsAndButtons(
       "This is where the white color will be recorded\n" +
       "Press CONFIRM to confirm, RESET to choose a different spot for white color",
-      imgY
+      imgY, imgHeight
     );
     createButtons = true;
   }
@@ -125,7 +125,7 @@ function draw() {
     drawInstructionsAndButtons(
       "This is where the purple color will be recorded\n" +
       "Press CONFIRM to confirm, RESET to choose a different spot for purple color",
-      imgY
+      imgY, imgHeight
     );
     createButtons = true;
   }
@@ -144,18 +144,19 @@ function draw() {
   }
 }
 
-function drawInstructionsAndButtons(textBlock, imgTop) {
-  // Place instructions a little above the image
-  const textTop = imgTop - 80; // 80px above image top
-  text(textBlock, width * 0.05, max(20, textTop), width * 0.9);
+function drawInstructionsAndButtons(textBlock, imgTop, imgHeight) {
+  // Place instructions just below the image
+  const textTop = imgTop + imgHeight + 20; // 20px gap below image
+  text(textBlock, width * 0.05, textTop, width * 0.9);
 
   const lines = textBlock.split("\n").length;
   const textHeight = lines * 24;
 
-  // Put buttons below the instructions text, but above the image
-  const buttonY = max(20, textTop + textHeight + 10);
+  // Put buttons below the instructions text
+  const buttonY = textTop + textHeight + 10;
   drawButtons(buttonY);
 }
+
 
 
 
