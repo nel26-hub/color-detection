@@ -49,7 +49,7 @@ function setup() {
     uploadedFile = event.target.files[0];
     if (uploadedFile) {
       if (!uploadedFile.type.startsWith("image/")) {
-        alert("Please upload a valid image file.");
+        alert("Please upload a valid image file (JPG, PNG, etc.)");
         return;
       }
       const objectURL = URL.createObjectURL(uploadedFile);
@@ -94,7 +94,7 @@ function draw() {
 
   if (whitePrompt) {
     fill('red');
-    text("Tap on the white circle", width * 0.05, imgY - 40, width * 0.9);
+    text("Tap on the white circle", width * 0.05, 20, width * 0.9);
   }
 
   if (whiteDirections) {
@@ -103,17 +103,24 @@ function draw() {
     fill(0);
     textSize(18);
     textLeading(24);
-    drawInstructionsAndButtons(
+
+    // instructions ABOVE the picture
+    const instructions =
       "This is where the white color will be recorded\n" +
-      "Press CONFIRM to confirm, RESET to choose a different spot for white color",
-      imgY, imgHeight
-    );
+      "Press CONFIRM to confirm, RESET to choose a different spot for white color";
+    const textTop = max(20, imgY - 80); 
+    text(instructions, width * 0.05, textTop, width * 0.9);
+
+    // buttons BELOW the picture
+    const buttonY = imgY + imgHeight + 30;
+    drawButtons(buttonY);
+
     createButtons = true;
   }
 
   if (colorPrompt) {
     fill('red');
-    text("Tap on the purple circle", width * 0.05, imgY - 40, width * 0.9);
+    text("Tap on the purple circle", width * 0.05, 20, width * 0.9);
     fill(0);
     ellipse(xWhite, yWhite, 7);
   }
@@ -126,18 +133,25 @@ function draw() {
     fill(0);
     textSize(18);
     textLeading(24);
-    drawInstructionsAndButtons(
+
+    // instructions ABOVE the picture
+    const instructions =
       "This is where the purple color will be recorded\n" +
-      "Press CONFIRM to confirm, RESET to choose a different spot for purple color",
-      imgY, imgHeight
-    );
+      "Press CONFIRM to confirm, RESET to choose a different spot for purple color";
+    const textTop = max(20, imgY - 80); 
+    text(instructions, width * 0.05, textTop, width * 0.9);
+
+    // buttons BELOW the picture
+    const buttonY = imgY + imgHeight + 30;
+    drawButtons(buttonY);
+
     createButtons = true;
   }
 
   if (finishedPicking) {
     let c = d.colors();
-    background(c[0], c[1], c[2]);  // corrected white background
-    fill(c[3], c[4], c[5]);        // corrected purple fill
+    background(c[0], c[1], c[2]);
+    fill(c[3], c[4], c[5]);
     let s = d.getColorValues();
     textSize(20);
     text(`Red: ${s[0]}, Green: ${s[1]}, Blue: ${s[2]}`, width * 0.05, 20, width * 0.9);
@@ -146,17 +160,6 @@ function draw() {
     text(`Red: ${s[3]}, Green: ${s[4]}, Blue: ${s[5]}`, width * 0.05, 96, width * 0.9);
     text("CF diagnosis: will add once data is collected", width * 0.05, 132, width * 0.9);
   }
-}
-
-function drawInstructionsAndButtons(textBlock, imgTop, imgHeight) {
-  const textTop = imgTop - 60; // show instructions above image
-  text(textBlock, width * 0.05, textTop, width * 0.9);
-
-  const lines = textBlock.split("\n").length;
-  const textHeight = lines * 24;
-
-  const buttonY = imgTop + imgHeight + 20;
-  drawButtons(buttonY);
 }
 
 function touchStarted() {
@@ -258,33 +261,33 @@ function drawButtons(y) {
 
 class DetectColor {
   constructor() {
-    this.whiter = 0; this.whiteb = 0; this.whiteg = 0;
-    this.scaleR = 1; this.scaleB = 1; this.scaleG = 1;
-    this.correctedR = 0; this.correctedB = 0; this.correctedG = 0;
-    this.r = 0; this.b = 0; this.g = 0; this.s = [];
+    this.whiter = 0; this.whiteg = 0; this.whiteb = 0;
+    this.scaleR = 1; this.scaleG = 1; this.scaleB = 1;
+    this.correctedR = 0; this.correctedG = 0; this.correctedB = 0;
+    this.r = 0; this.g = 0; this.b = 0; this.s = [];
   }
 
   whiteCircle(x, y, imageRef) {
     const c = imageRef.get(x, y);
-    this.whiter = red(c); this.whiteb = blue(c); this.whiteg = green(c);
+    this.whiter = red(c); this.whiteg = green(c); this.whiteb = blue(c);
   }
 
   purple(x, y, imageRef) {
     const c = imageRef.get(x, y);
-    this.r = red(c); this.b = blue(c); this.g = green(c);
+    this.r = red(c); this.g = green(c); this.b = blue(c);
     this.scaleR = 255 / this.whiter;
-    this.scaleB = 255 / this.whiteb;
     this.scaleG = 255 / this.whiteg;
+    this.scaleB = 255 / this.whiteb;
     this.correctedR = constrain(this.r * this.scaleR, 0, 255);
-    this.correctedB = constrain(this.b * this.scaleB, 0, 255);
     this.correctedG = constrain(this.g * this.scaleG, 0, 255);
+    this.correctedB = constrain(this.b * this.scaleB, 0, 255);
   }
 
   getColorValues() {
     if (this.s.length < 6) {
       this.s.push(
-        int(this.r), int(this.g), int(this.b),        // raw RGB
-        int(this.correctedR), int(this.correctedG), int(this.correctedB)  // corrected RGB
+        int(this.r), int(this.g), int(this.b),
+        int(this.correctedR), int(this.correctedG), int(this.correctedB)
       );
     }
     return this.s;
@@ -292,9 +295,9 @@ class DetectColor {
 
   colors() {
     return [
-      int(this.whiter * this.scaleR),  // corrected white R
-      int(this.whiteg * this.scaleG),  // corrected white G
-      int(this.whiteb * this.scaleB),  // corrected white B
+      int(this.whiter * this.scaleR),
+      int(this.whiteg * this.scaleG),
+      int(this.whiteb * this.scaleB),
       int(this.correctedR),
       int(this.correctedG),
       int(this.correctedB)
